@@ -61,6 +61,8 @@ fn unpack_command(input_file: &String, output_path: &String) -> Result<(), Box<d
     let decompressed_data = decompress(input_file.as_str())?;
     let files = unpack(&decompressed_data.archive)?;
 
+    let magic: u32 = 0xdeadc0de;
+
     for i in 0..files.len() {
         let data = unpack::extract_file(&decompressed_data.archive, &files[i])?;
 
@@ -75,6 +77,8 @@ fn unpack_command(input_file: &String, output_path: &String) -> Result<(), Box<d
         let output_filename = Path::new(output_path).join(filename);
 
         let mut output_file = File::create(output_filename)?;
+        output_file.write_all(&(magic.to_le_bytes()))?;
+        output_file.write_all(&files[i].offset.to_le_bytes())?;
         output_file.write_all(data.as_slice())?;
         output_file.flush()?;
     }
